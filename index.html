@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RemisesPro</title>
+<meta name="description" content="Suivi des remises fournisseurs">
+<meta name="theme-color" content="#0f0f13">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RemisesPro">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="logo.jpg">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222d;
+    --border: #2e2e3d;
+    --accent: #00e5a0;
+    --accent2: #ff6b35;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --danger: #ff4757;
+    --radius: 14px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 14px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .header-badge {
+    background: var(--accent); color: #000;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px;
+    font-family: var(--mono);
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 6px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none; padding: 13px 14px;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .screen { display: none; padding: 16px; }
+  .screen.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin-bottom: 14px;
+  }
+
+  .form-group { margin-bottom: 13px; }
+  .form-group label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 5px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: var(--sans);
+    font-size: 15px; padding: 12px 14px;
+    transition: border-color 0.2s; -webkit-appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-group select option { background: var(--surface2); }
+  .form-group textarea { height: 65px; resize: none; }
+
+  .remise-toggle {
+    display: flex; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px; gap: 4px;
+  }
+  .remise-btn {
+    flex: 1; text-align: center; padding: 10px;
+    border-radius: 7px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; color: var(--muted);
+  }
+  .remise-btn.active { background: var(--accent); color: #000; }
+
+  .remise-calc {
+    background: linear-gradient(135deg, rgba(0,229,160,0.1), rgba(0,229,160,0.04));
+    border: 1px solid rgba(0,229,160,0.3);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: var(--mono); font-size: 22px; font-weight: 500;
+    color: var(--accent); text-align: center;
+    min-height: 52px; display: flex; align-items: center; justify-content: center;
+  }
+
+  .btn {
+    width: 100%; padding: 15px; border-radius: var(--radius);
+    font-family: var(--sans); font-size: 15px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:active { background: #00c487; transform: scale(0.98); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: rgba(255,71,87,0.12); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); margin-top: 8px; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+  }
+  .stat-card.accent { border-color: rgba(0,229,160,0.35); background: linear-gradient(135deg, rgba(0,229,160,0.07), var(--surface)); }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .stat-value { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--accent); }
+  .stat-value.orange { color: var(--accent2); }
+  .stat-value.white { color: var(--text); font-size: 18px; }
+
+  .commande-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .commande-item:active { border-color: var(--accent); }
+  .commande-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .commande-numero { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .commande-date { font-size: 12px; color: var(--muted); }
+  .commande-fournisseur { font-size: 15px; font-weight: 700; margin-bottom: 7px; }
+  .commande-montants { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .montant-ht { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .remise-badge {
+    background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.3);
+    color: var(--accent); font-family: var(--mono);
+    font-size: 12px; padding: 3px 8px; border-radius: 6px;
+  }
+  .commentaire-text { font-size: 12px; color: var(--muted); margin-top: 6px; font-style: italic; }
+
+  .rapport-filter { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 14px; }
+  .filter-btn {
+    padding: 9px 4px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    text-align: center; cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); transition: all 0.2s;
+  }
+  .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+  .rapport-export {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text); white-space: pre-wrap;
+    line-height: 1.7; margin-bottom: 12px;
+    max-height: 320px; overflow-y: auto;
+  }
+
+  .fournisseur-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 0; border-bottom: 1px solid var(--border);
+  }
+  .fournisseur-row:last-child { border-bottom: none; }
+  .fournisseur-name { font-weight: 700; font-size: 15px; }
+  .fournisseur-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .fournisseur-total { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--accent); text-align: right; }
+  .fournisseur-pct { font-size: 11px; color: var(--muted); text-align: right; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 300;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; padding: 20px;
+    width: 100%; max-width: 480px;
+    max-height: 82vh; overflow-y: auto;
+    animation: slideUp 0.22s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 800; }
+  .modal-close { font-size: 26px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+  .detail-val { font-size: 13px; font-weight: 700; font-family: var(--mono); text-align: right; }
+  .detail-val.green { color: var(--accent); }
+  .detail-val.note { font-family: var(--sans); font-weight: 400; font-style: italic; }
+
+  .empty { text-align: center; padding: 50px 20px; color: var(--muted); }
+  .empty-icon { font-size: 46px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  .toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #000; font-weight: 700; font-size: 14px;
+    padding: 10px 22px; border-radius: 30px; z-index: 500;
+    display: none; white-space: nowrap;
+    box-shadow: 0 4px 24px rgba(0,229,160,0.4);
+  }
+  .toast.show { display: block; animation: fadeInOut 2.5s forwards; }
+  @keyframes fadeInOut {
+    0% { opacity:0; top:90px } 15% { opacity:1; top:80px }
+    75% { opacity:1; top:80px } 100% { opacity:0; top:70px }
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.7); }
+  ::placeholder { color: var(--muted); opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">Remises<span>Pro</span></div>
+    <div class="header-badge" id="compteur-badge">0 commande</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active"  onclick="switchTab('accueil')">📊 Accueil</div>
+  <div class="tab"         onclick="switchTab('saisie')">➕ Saisie</div>
+  <div class="tab"         onclick="switchTab('historique')">📋 Historique</div>
+  <div class="tab"         onclick="switchTab('rapport')">📄 Rapport</div>
+  <div class="tab"         onclick="switchTab('fournisseurs')">🏭 Fournisseurs</div>
+</div>
+
+<!-- ===== ACCUEIL ===== -->
+<div id="screen-accueil" class="screen active">
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">Total remises</div>
+      <div class="stat-value" id="total-remises">0,00 €</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Ce mois</div>
+      <div class="stat-value orange" id="remises-mois">0,00 €</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Commandes</div>
+      <div class="stat-value white" id="nb-commandes">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Moy. remise %</div>
+      <div class="stat-value white" id="moy-remise">—</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">5 dernières remises</div>
+    <div id="liste-recentes"></div>
+  </div>
+</div>
+
+<!-- ===== SAISIE ===== -->
+<div id="screen-saisie" class="screen">
+  <div class="card">
+    <div class="card-title" id="form-title">Nouvelle commande</div>
+
+    <div class="form-group">
+      <label>N° de commande *</label>
+      <input type="text" id="f-numero" placeholder="ex : CMD-2024-0042">
+    </div>
+    <div class="form-group">
+      <label>Fournisseur *</label>
+      <input type="text" id="f-fournisseur" placeholder="Nom du fournisseur" list="list-fournisseurs">
+      <datalist id="list-fournisseurs"></datalist>
+    </div>
+    <div class="form-group">
+      <label>Date de commande *</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="form-group">
+      <label>Montant HT de la commande (€) *</label>
+      <input type="number" id="f-montant-ht" placeholder="0.00" min="0" step="0.01" oninput="calcRemise()">
+    </div>
+
+    <div class="form-group">
+      <label>Type de remise *</label>
+      <div class="remise-toggle">
+        <div class="remise-btn active" id="btn-montant" onclick="setRemiseType('montant')">💶 Montant €</div>
+        <div class="remise-btn" id="btn-pct" onclick="setRemiseType('pct')">% Pourcentage</div>
+      </div>
+    </div>
+
+    <div class="form-group" id="group-montant">
+      <label>Montant de la remise (€) *</label>
+      <input type="number" id="f-remise-montant" placeholder="0.00" min="0" step="0.01" oninput="calcRemise()">
+    </div>
+    <div class="form-group" id="group-pct" style="display:none">
+      <label>Pourcentage de remise (%) *</label>
+      <input type="number" id="f-remise-pct" placeholder="0.0" min="0" max="100" step="0.1" oninput="calcRemise()">
+    </div>
+
+    <div class="form-group">
+      <label>Remise calculée</label>
+      <div class="remise-calc" id="remise-calc-display">— €</div>
+    </div>
+
+    <div class="form-group">
+      <label>Commentaire (optionnel)</label>
+      <textarea id="f-commentaire" placeholder="Raison de la remise, contexte…"></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="sauvegarder()">✅ Enregistrer</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="resetForm()">🔄 Effacer</button>
+  </div>
+</div>
+
+<!-- ===== HISTORIQUE ===== -->
+<div id="screen-historique" class="screen">
+  <div class="card" style="padding:12px 16px; margin-bottom:12px">
+    <input type="text" id="search-histo" placeholder="🔍  Chercher n°, fournisseur…" oninput="renderHistorique()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 14px;width:100%">
+  </div>
+  <div id="liste-historique"></div>
+</div>
+
+<!-- ===== RAPPORT ===== -->
+<div id="screen-rapport" class="screen">
+  <div class="card">
+    <div class="card-title">Période</div>
+    <div class="rapport-filter">
+      <div class="filter-btn active" id="rb-jour"    onclick="setPeriode('jour')">Jour</div>
+      <div class="filter-btn"        id="rb-semaine" onclick="setPeriode('semaine')">Sem.</div>
+      <div class="filter-btn"        id="rb-mois"    onclick="setPeriode('mois')">Mois</div>
+      <div class="filter-btn"        id="rb-libre"   onclick="setPeriode('libre')">Libre</div>
+    </div>
+    <div class="date-range" id="date-range-libre" style="display:none">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Du</label>
+        <input type="date" id="r-date-debut" onchange="genererRapport()">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Au</label>
+        <input type="date" id="r-date-fin" onchange="genererRapport()">
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">Remises période</div>
+      <div class="stat-value" id="r-total">0,00 €</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Commandes</div>
+      <div class="stat-value white" id="r-nb">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">CA HT</div>
+      <div class="stat-value white" id="r-ca">0,00 €</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Moy. remise</div>
+      <div class="stat-value orange" id="r-moy">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rapport texte</div>
+    <div class="rapport-export" id="rapport-texte">Aucune donnée pour cette période.</div>
+    <button class="btn btn-secondary" onclick="copierRapport()">📋 Copier le rapport</button>
+  </div>
+</div>
+
+<!-- ===== FOURNISSEURS ===== -->
+<div id="screen-fournisseurs" class="screen">
+  <div class="card">
+    <div class="card-title">Classement — remises totales</div>
+    <div id="liste-fournisseurs"></div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Commande</div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div id="modal-body"></div>
+    <button class="btn btn-danger" onclick="supprimerCommande()">🗑 Supprimer cette commande</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'remises_pro_v2';
+let commandes = [];
+let remiseType = 'montant';
+let currentPeriode = 'jour';
+let modalId = null;
+
+function load() {
+  try { commandes = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { commandes = []; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(commandes)); }
+
+function fmt(n) {
+  return Number(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+}
+function fmtPct(n) {
+  return Number(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' %';
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+function parseDate(d) { return new Date(d + 'T00:00:00'); }
+function formatDate(d) { const [y,m,j]=d.split('-'); return `${j}/${m}/${y}`; }
+function startOfWeek(d) {
+  const dt = new Date(d); const day = dt.getDay();
+  dt.setDate(dt.getDate() - (day===0?6:day-1)); return dt;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  setTimeout(()=> t.className='toast', 2700);
+}
+
+// ---- TABS ----
+function switchTab(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const tabs=['accueil','saisie','historique','rapport','fournisseurs'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  if(name==='accueil') renderAccueil();
+  if(name==='historique') renderHistorique();
+  if(name==='rapport') genererRapport();
+  if(name==='fournisseurs') renderFournisseurs();
+}
+
+// ---- FORM ----
+function setRemiseType(type) {
+  remiseType = type;
+  document.getElementById('btn-montant').classList.toggle('active', type==='montant');
+  document.getElementById('btn-pct').classList.toggle('active', type==='pct');
+  document.getElementById('group-montant').style.display = type==='montant'?'':'none';
+  document.getElementById('group-pct').style.display = type==='pct'?'':'none';
+  calcRemise();
+}
+
+function calcRemise() {
+  const ht = parseFloat(document.getElementById('f-montant-ht').value)||0;
+  let m = 0;
+  if(remiseType==='montant') {
+    m = parseFloat(document.getElementById('f-remise-montant').value)||0;
+  } else {
+    const pct = parseFloat(document.getElementById('f-remise-pct').value)||0;
+    m = ht*pct/100;
+  }
+  const el = document.getElementById('remise-calc-display');
+  if(m>0) {
+    const pct = ht>0 ? (m/ht*100).toFixed(2) : '—';
+    el.textContent = fmt(m) + (remiseType==='pct' ? '' : '  ('+pct+' %)');
+  } else {
+    el.textContent = '— €';
+  }
+}
+
+function resetForm() {
+  document.getElementById('form-title').textContent = 'Nouvelle commande';
+  document.getElementById('f-numero').value = '';
+  document.getElementById('f-fournisseur').value = '';
+  document.getElementById('f-date').value = today();
+  document.getElementById('f-montant-ht').value = '';
+  document.getElementById('f-remise-montant').value = '';
+  document.getElementById('f-remise-pct').value = '';
+  document.getElementById('f-commentaire').value = '';
+  calcRemise();
+}
+
+function sauvegarder() {
+  const numero = document.getElementById('f-numero').value.trim();
+  const fournisseur = document.getElementById('f-fournisseur').value.trim();
+  const date = document.getElementById('f-date').value;
+  const ht = parseFloat(document.getElementById('f-montant-ht').value);
+
+  if(!numero||!fournisseur||!date||isNaN(ht)||ht<=0) { showToast('⚠️ Remplir les champs obligatoires'); return; }
+
+  let remiseMontant=0, remisePct=0;
+  if(remiseType==='montant') {
+    remiseMontant = parseFloat(document.getElementById('f-remise-montant').value)||0;
+    remisePct = ht>0 ? remiseMontant/ht*100 : 0;
+  } else {
+    remisePct = parseFloat(document.getElementById('f-remise-pct').value)||0;
+    remiseMontant = ht*remisePct/100;
+  }
+  if(remiseMontant<=0) { showToast('⚠️ Indiquer une remise > 0'); return; }
+  if(remiseMontant>ht) { showToast('⚠️ Remise supérieure au montant HT'); return; }
+
+  const commentaire = document.getElementById('f-commentaire').value.trim();
+  commandes.push({ id: Date.now().toString(), numero, fournisseur, date, ht, remiseMontant, remisePct, commentaire });
+  save(); updateBadge(); updateDatalist(); resetForm();
+  showToast('✅ Commande enregistrée');
+  switchTab('accueil');
+}
+
+function updateDatalist() {
+  const fns = [...new Set(commandes.map(c=>c.fournisseur))].sort();
+  document.getElementById('list-fournisseurs').innerHTML = fns.map(f=>`<option value="${f}">`).join('');
+}
+function updateBadge() {
+  const n = commandes.length;
+  document.getElementById('compteur-badge').textContent = n+' commande'+(n>1?'s':'');
+}
+
+// ---- ACCUEIL ----
+function renderAccueil() {
+  const now = new Date();
+  const mois = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const totalRemises = commandes.reduce((s,c)=>s+c.remiseMontant,0);
+  const remisesMois = commandes.filter(c=>c.date.startsWith(mois)).reduce((s,c)=>s+c.remiseMontant,0);
+  const avgPct = commandes.length ? commandes.reduce((s,c)=>s+c.remisePct,0)/commandes.length : 0;
+  document.getElementById('total-remises').textContent = fmt(totalRemises);
+  document.getElementById('remises-mois').textContent = fmt(remisesMois);
+  document.getElementById('nb-commandes').textContent = commandes.length;
+  document.getElementById('moy-remise').textContent = commandes.length ? fmtPct(avgPct) : '—';
+  const recent = [...commandes].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const el = document.getElementById('liste-recentes');
+  if(!recent.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Aucune commande enregistrée.<br>Commencez par l\'onglet Saisie !</div></div>';
+    return;
+  }
+  el.innerHTML = recent.map(commandeHTML).join('');
+}
+
+function commandeHTML(c) {
+  return `<div class="commande-item" onclick="voirDetail('${c.id}')">
+    <div class="commande-header">
+      <div class="commande-numero">${c.numero}</div>
+      <div class="commande-date">${formatDate(c.date)}</div>
+    </div>
+    <div class="commande-fournisseur">${c.fournisseur}</div>
+    <div class="commande-montants">
+      <span class="montant-ht">${fmt(c.ht)} HT</span>
+      <span class="remise-badge">−${fmt(c.remiseMontant)} · ${c.remisePct.toFixed(1)}%</span>
+    </div>
+    ${c.commentaire?`<div class="commentaire-text">${c.commentaire}</div>`:''}
+  </div>`;
+}
+
+// ---- HISTORIQUE ----
+function renderHistorique() {
+  const q = (document.getElementById('search-histo').value||'').toLowerCase();
+  const filtered = [...commandes]
+    .filter(c=>!q||c.numero.toLowerCase().includes(q)||c.fournisseur.toLowerCase().includes(q))
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const el = document.getElementById('liste-historique');
+  if(!filtered.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Aucun résultat.</div></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(commandeHTML).join('');
+}
+
+// ---- MODAL ----
+function voirDetail(id) {
+  const c = commandes.find(x=>x.id===id);
+  if(!c) return;
+  modalId = id;
+  document.getElementById('modal-title').textContent = c.numero;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Fournisseur</span><span class="detail-val">${c.fournisseur}</span></div>
+    <div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">${formatDate(c.date)}</span></div>
+    <div class="detail-row"><span class="detail-key">Montant HT</span><span class="detail-val">${fmt(c.ht)}</span></div>
+    <div class="detail-row"><span class="detail-key">Remise</span><span class="detail-val green">${fmt(c.remiseMontant)}</span></div>
+    <div class="detail-row"><span class="detail-key">Taux</span><span class="detail-val green">${fmtPct(c.remisePct)}</span></div>
+    ${c.commentaire?`<div class="detail-row"><span class="detail-key">Note</span><span class="detail-val note">${c.commentaire}</span></div>`:''}
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+function supprimerCommande() {
+  if(!modalId) return;
+  commandes = commandes.filter(c=>c.id!==modalId);
+  save(); updateBadge(); updateDatalist();
+  closeModal();
+  showToast('🗑 Commande supprimée');
+  renderAccueil(); renderHistorique(); renderFournisseurs();
+}
+
+// ---- RAPPORT ----
+function setPeriode(p) {
+  currentPeriode = p;
+  ['jour','semaine','mois','libre'].forEach(x=>{
+    document.getElementById('rb-'+x).classList.toggle('active',x===p);
+  });
+  document.getElementById('date-range-libre').style.display = p==='libre'?'grid':'none';
+  if(p!=='libre') genererRapport();
+}
+function getPeriodeDates() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  if(currentPeriode==='jour') return {debut:new Date(t),fin:new Date(t)};
+  if(currentPeriode==='semaine') {
+    const debut=startOfWeek(t);
+    const fin=new Date(debut); fin.setDate(fin.getDate()+6);
+    return {debut,fin};
+  }
+  if(currentPeriode==='mois') {
+    return {debut:new Date(t.getFullYear(),t.getMonth(),1), fin:new Date(t.getFullYear(),t.getMonth()+1,0)};
+  }
+  if(currentPeriode==='libre') {
+    const d=document.getElementById('r-date-debut').value;
+    const f=document.getElementById('r-date-fin').value;
+    if(!d||!f) return null;
+    return {debut:parseDate(d),fin:parseDate(f)};
+  }
+  return null;
+}
+function genererRapport() {
+  const range = getPeriodeDates();
+  if(!range) { document.getElementById('rapport-texte').textContent='Sélectionner une plage de dates.'; return; }
+  const {debut,fin} = range;
+  const filtered = commandes.filter(c=>{
+    const d=parseDate(c.date); return d>=debut&&d<=fin;
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+  const totalR = filtered.reduce((s,c)=>s+c.remiseMontant,0);
+  const totalHT = filtered.reduce((s,c)=>s+c.ht,0);
+  const avgPct = filtered.length ? filtered.reduce((s,c)=>s+c.remisePct,0)/filtered.length : 0;
+  document.getElementById('r-total').textContent = fmt(totalR);
+  document.getElementById('r-nb').textContent = filtered.length;
+  document.getElementById('r-ca').textContent = fmt(totalHT);
+  document.getElementById('r-moy').textContent = filtered.length ? fmtPct(avgPct) : '—';
+  const titres={jour:'JOURNALIER',semaine:'HEBDOMADAIRE',mois:'MENSUEL',libre:'PERSONNALISÉ'};
+  const fmtD=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  let txt=`RAPPORT ${titres[currentPeriode]} — REMISES\n`;
+  txt+=`Période : ${fmtD(debut)} → ${fmtD(fin)}\n`;
+  txt+=`${'─'.repeat(40)}\n`;
+  txt+=`Commandes      : ${filtered.length}\n`;
+  txt+=`CA HT total    : ${fmt(totalHT)}\n`;
+  txt+=`Remises totales: ${fmt(totalR)}\n`;
+  txt+=`Taux moyen     : ${filtered.length?fmtPct(avgPct):'—'}\n`;
+  txt+=`${'─'.repeat(40)}\n`;
+  if(filtered.length) {
+    txt+='\nDÉTAIL :\n\n';
+    filtered.forEach(c=>{
+      txt+=`${c.numero}  |  ${c.fournisseur}\n`;
+      txt+=`  Date     : ${formatDate(c.date)}\n`;
+      txt+=`  Montant  : ${fmt(c.ht)} HT\n`;
+      txt+=`  Remise   : −${fmt(c.remiseMontant)} (${c.remisePct.toFixed(2)}%)\n`;
+      if(c.commentaire) txt+=`  Note     : ${c.commentaire}\n`;
+      txt+='\n';
+    });
+  } else {
+    txt+='\nAucune commande sur cette période.\n';
+  }
+  document.getElementById('rapport-texte').textContent = txt;
+}
+function copierRapport() {
+  const txt = document.getElementById('rapport-texte').textContent;
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(()=>showToast('📋 Rapport copié !'));
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('📋 Rapport copié !');
+  }
+}
+
+// ---- FOURNISSEURS ----
+function renderFournisseurs() {
+  const map={};
+  commandes.forEach(c=>{
+    if(!map[c.fournisseur]) map[c.fournisseur]={total:0,count:0,ht:0};
+    map[c.fournisseur].total+=c.remiseMontant;
+    map[c.fournisseur].count++;
+    map[c.fournisseur].ht+=c.ht;
+  });
+  const sorted=Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
+  const el=document.getElementById('liste-fournisseurs');
+  if(!sorted.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Aucun fournisseur enregistré.</div></div>';
+    return;
+  }
+  el.innerHTML=sorted.map(([fn,d])=>{
+    const pct=d.ht>0?(d.total/d.ht*100).toFixed(2):'—';
+    return `<div class="fournisseur-row">
+      <div>
+        <div class="fournisseur-name">${fn}</div>
+        <div class="fournisseur-meta">${d.count} commande${d.count>1?'s':''} · ${fmt(d.ht)} HT</div>
+      </div>
+      <div>
+        <div class="fournisseur-total">${fmt(d.total)}</div>
+        <div class="fournisseur-pct">moy. ${pct} %</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---- INIT ----
+load();
+document.getElementById('f-date').value = today();
+updateBadge();
+updateDatalist();
+renderAccueil();
+
+// ---- SERVICE WORKER ----
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW enregistré :', reg.scope))
+      .catch(err => console.warn('SW erreur :', err));
+  });
+}
+</script>
+</body>
+</html>
