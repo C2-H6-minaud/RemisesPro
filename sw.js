@@ -2,9 +2,9 @@ const CACHE_NAME = 'remises-pro-v1';
 
 // Fichiers à mettre en cache pour le mode hors ligne
 const ASSETS = [
-  './suivi-remises.html',
-  './manifest.json',
-  './logo.jpg'
+  'index.html',
+  'manifest.json',
+  'logo.jpg'
 ];
 
 // ── Installation : mise en cache des ressources statiques ──
