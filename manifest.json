@@ -2,7 +2,7 @@
   "name": "RemisesPro",
   "short_name": "RemisesPro",
   "description": "Suivi des remises fournisseurs",
-  "start_url": "./suivi-remises.html",
+  "start_url": "index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f0f13",
