@@ -1,0 +1,25 @@
+{
+  "name": "RemisesPro",
+  "short_name": "RemisesPro",
+  "description": "Suivi des remises fournisseurs",
+  "start_url": "./suivi-remises.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f13",
+  "theme_color": "#0f0f13",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
